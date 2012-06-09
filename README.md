@@ -4,7 +4,7 @@ About osqa-fresh-skin
 This is a custom theme for the famous Q&A system http://www.osqa.net/ that is based on the  Nuxeo Skin (http://github.com/nuxeo/osqa-nuxeo-skin).
 
 ## Sample Screenshot ##
-![Demo](https://github.com/lgr/jquery-bitcoin/raw/master/demo.png)
+![Demo](https://github.com/lgr/osqa-fresh-skin/raw/master/demo.png)
 
 
 Installation
