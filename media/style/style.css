@@ -88,6 +88,7 @@ h1 {
     font-size: 160%;
     padding: 5px 0;
     line-height: 110%;
+    overflow: hidden;
 }
 
 h2 {
@@ -146,6 +147,151 @@ blockquote {
     padding: 10px 0 1px 10px;
     max-width: 650px;
 }
+
+blockquote blockquote {
+    margin: 0;
+    padding: 0;
+}
+
+/* BEGIN: Bitcoin boxes */
+
+.btc-question-value-loader{
+    width: 300px;
+    height: 45px;
+    float: right;
+    line-height: 0.8em;
+}
+
+.bitcoin-details .tabsA {
+    margin-bottom: 20px;
+}
+
+#question_reward_button{
+    float:right;
+}
+
+.btc-question-value-loader .additional-info {
+    float: right;
+    padding: 0 5px 15px 0px;
+    font-size: small;
+    font-weight: normal;
+    white-space: nowrap;
+    max-height: 32px;
+    max-width: 250px;
+    margin-top: -5px;
+    background: transparent url('/upfiles/arrow.png') no-repeat bottom right;
+}
+
+.btc-question-value-loader .green {
+    background: transparent url('/upfiles/arrow_green.png') no-repeat bottom right;
+}
+
+.btc-question-value-loader img{
+    width: 32px;
+    height: 32px;
+    margin: 0 0 -5px 5px;
+}
+
+.btc-question-value-loader .value{
+    font-size: 2em;
+    margin-left: 10px;
+}
+
+.dialog-content #id_reward {
+    max-width: 80px;
+    background-color: #ffffff;
+    border-radius: 3px 3px 3px 3px;
+    border: #888888 solid 1px;
+    margin-top: -2px;
+    text-align: right;
+}
+
+.bitcoin-reward-list{
+    float: right;
+    color: #666666;
+}
+
+.btc-questionreward-loader{
+    float: right;
+    color: #000000;
+    margin-left: 5px;
+    display: inline;
+    font-weight: bold;
+}
+
+.icon-btc {
+    width: 16px;
+    height: 16px;
+    margin: 3px 3px -2px 3px;
+}
+
+#askform .icon-btc{
+    width: 24px;
+    height: 24px;
+    margin: 0 10px -8px 3px;
+}
+
+li > ul {
+    list-style: none;
+    display: inline;
+}
+
+.dialog-content li {
+    text-align: left;
+}
+
+.bitcoin-details{
+    font-size: 13px;
+}
+
+.unconfirmed-value{
+    color: #666;
+}
+
+.bitcoin-address{
+    font-weight: bold;
+    font-size: 1.2em;
+    background-color: #ffffff;
+    border-radius: 3px 3px 3px 3px;
+    border: #888888 solid 1px;
+    padding: 5px;
+    margin: 5px auto;
+    display: block;
+    max-height: 18px;
+    width: 100%;
+    min-width: 360px;
+    text-align: center;
+}
+
+.dialog-content .bitcoin-address{
+    font-size: 1.1em;
+    position: relative;
+    width: auto;
+} 
+
+.bitcoin-details #id_amount {
+    max-width: 70px;
+    float: left;
+    min-width: 50px;
+}
+
+table.bitcoin-details td:first-child{
+    min-width: 120px;
+}
+
+div.qrcode-loader{
+    width: 185px;
+    height: 30px;
+    text-align: center;
+    background-color: #ffffff;
+}
+
+.qrcode{
+    width: 185px;
+    height: 185px;
+}
+
+/* END: Bitcoin boxes */
 
 #wrapper, #announcement {
     margin: 0 auto;

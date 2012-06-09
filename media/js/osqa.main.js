@@ -1,3 +1,32 @@
+/**
+ * We do not want the CSRF protection enabled for the AJAX post requests, it causes only trouble.
+ * Get the csrftoken cookie and pass it to the X-CSRFToken HTTP request property.
+ */
+
+$('html').ajaxSend(function(event, xhr, settings) {
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    try {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            // Only send the token to relative URLs i.e. locally.
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    } catch (e) {}
+});
+
 var response_commands = {
     refresh_page: function() {
         window.location.reload(true)
@@ -75,7 +104,7 @@ var response_commands = {
         alert('ok');
     },
 
-    insert_comment: function(post_id, comment_id, comment, username, profile_url, delete_url, edit_url, convert_url) {
+    insert_comment: function(post_id, comment_id, comment, username, profile_url, delete_url, edit_url, convert_url, can_convert) {
         var $container = $('#comments-container-' + post_id);
         var skeleton = $('#new-comment-skeleton-' + post_id).html().toString();
 
@@ -89,6 +118,11 @@ var response_commands = {
 
         $container.append(skeleton);
 
+        // Show the convert comment to answer tool only if the current comment can be converted
+        if (can_convert == true) {
+            $('#comment-' + comment_id + '-convert').show();
+        }
+
         $('#comment-' + comment_id).slideDown('slow');
     },
 
@@ -100,12 +134,12 @@ var response_commands = {
     },
 
     mark_deleted: function(post_type, post_id) {
-        if (post_type == 'answer') {
-            var $answer = $('#answer-container-' + post_id);
-            $answer.addClass('deleted');
-        } else {
+        if (post_type == 'question') {
             var $container = $('#question-table');
             $container.addClass('deleted');
+        } else {
+            var $el = $('#' + post_type + '-container-' + post_id);
+            $el.addClass('deleted');
         }
     },
 
@@ -125,6 +159,9 @@ var response_commands = {
 
     set_subscription_status: function(text) {
         $('.subscription-status').html(text);
+    },
+
+    copy_url: function(url) {
     }
 }
 
@@ -146,10 +183,16 @@ function show_dialog (extern) {
         yes_callback: default_close_function,
         no_text: messages.cancel,
         show_no: false,
-        close_on_clickoutside: false
+        close_on_clickoutside: false,
+        copy: false
     }
 
     $.extend(options, extern);
+
+    var copy_id = '';
+    if (options.copy) {
+        copy_id = ' id="copy_clip_button"'
+    }
 
     if (options.event != undefined) {
         options.pos = {x: options.event.pageX, y: options.event.pageY};
@@ -162,8 +205,7 @@ function show_dialog (extern) {
         html += '<button class="dialog-no">' + options.no_text + '</button>';
     }
 
-    html += '<button class="dialog-yes">' + options.yes_text + '</button>'
-            + '</div></div>';
+    html += '<button class="dialog-yes"' + copy_id + '>' + options.yes_text + '</button>' + '</div></div>';
 
     $dialog = $(html);
     $('body').append($dialog);
@@ -269,7 +311,12 @@ function load_prompt(evt, el, url) {
                     process_ajax_response(data, evt);
                 }, 'json');
             },
-            show_no: true
+            show_no: true,
+            copy: false
+        }
+
+        if (el.hasClass('copy')) {
+            $.extend(doptions, { yes_text : 'Copy', copy: true});
         }
 
         if (!el.is('.centered')) {
@@ -320,23 +367,47 @@ function end_command(success) {
     }
 }
 
+var comment_box_cursor_position = 0;
+function canned_comment(post_id, comment) {
+    textarea = $('#comment-' + post_id + '-form textarea')
+
+    // Get the text from the beginning to the caret
+    textarea_start = textarea.val().substr(0, comment_box_cursor_position)
+
+    // Get the text from the caret to the end
+    textarea_end = textarea.val().substr(comment_box_cursor_position, textarea.val().length)
+
+    textarea.val(textarea_start + comment + textarea_end);
+}
+
 $(function() {
+    $('textarea.commentBox').bind('keydown keyup mousedown mouseup mousemove', function(evt) {
+        comment_box_cursor_position = $(this).caret().start;
+    });
+
+    $('textarea.commentBox').blur(function() {
+        //alert(comment_box_cursor_position);
+    });
+
     $('a.ajax-command').live('click', function(evt) {
         if (running) return false;
 
-        $('.context-menu-dropdown').slideUp('fast');
-
         var el = $(this);
 
+        var ajax_url = el.attr('href')
+        ajax_url = ajax_url + "?nocache=" + new Date().getTime()
+
+        $('.context-menu-dropdown').slideUp('fast');
+
         if (el.is('.withprompt')) {
-            load_prompt(evt, el, el.attr('href'));
+            load_prompt(evt, el, ajax_url);
         } else if(el.is('.confirm')) {
             var doptions = {
                 html: messages.confirm,
                 extra_class: 'confirm',
                 yes_callback: function() {
                     start_command();
-                    $.getJSON(el.attr('href'), function(data) {
+                    $.getJSON(ajax_url, function(data) {
                         process_ajax_response(data, evt);
                         $dialog.fadeOut('fast', function() {
                             $dialog.remove();
@@ -354,7 +425,7 @@ $(function() {
             var $dialog = show_dialog(doptions);
         } else {
             start_command();
-            $.getJSON(el.attr('href'), function(data) {
+            $.getJSON(ajax_url, function(data) {
                 process_ajax_response(data, evt);
             });
         }
@@ -563,8 +634,8 @@ $(function() {
         var $previewer = $('#previewer');
         var $container = $('#editor-metrics');
 
-        var initial_whitespace_rExp = /^[^A-Za-z0-9]+/gi;
-        var non_alphanumerics_rExp = rExp = /[^A-Za-z0-9]+/gi;
+        var initial_whitespace_rExp = /^[^A-Za-zА-Яа-я0-9]+/gi;
+        var non_alphanumerics_rExp = rExp = /[^A-Za-zА-Яа-я0-9]+/gi;
         var editor_interval = null;
 
         $editor.focus(function() {
@@ -681,7 +752,7 @@ function pickedTags(){
                 tag_link.attr('rel','tag');
                 tag_link.attr('href', scriptUrl + $.i18n._('tags/') + tagname + '/');
                 tag_link.html(tagname);
-                var del_link = $('<img></img>');
+                var del_link = $('<img />');
                 del_link.addClass('delete-icon');
                 del_link.attr('src', mediaUrl('media/images/close-small-dark.png'));
 
