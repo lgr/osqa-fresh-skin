@@ -5,7 +5,6 @@
 {% block forejs %}
         <script type='text/javascript' src='{% media  "/media/js/wmd/showdown.js" %}'></script>
         <script type='text/javascript' src='{% media  "/media/js/wmd/wmd.js" %}'></script>
-        <script type='text/javascript' src='{% media  "/media/js/tag_wizard.js" %}'></script>
         <link rel="stylesheet" type="text/css" href="{% media  "/media/js/wmd/wmd.css" %}" />
         <script type="text/html" id="question-summary-template">
             <div class="answer-summary">
@@ -14,24 +13,6 @@
                     <a class="question-hyperlink" href="%URL%" title="%SUMMARY%">%TITLE%</a>
                 </div>
             </div>
-        </script>
-        <script type="text/html" id="tag-wizard-template"> 
-            <form class="tag-wizard">
-                <p>
-                    This wizard will help you select a good tag for your audience.
-                    Feel free to add additional tags manually as well.
-                </p>
-                <p>
-                    <label for="product">What is your question about?</label>
-                    <select name="product" id="product"></select>
-                </p>
-                <!--p id="devq">
-                    <label>Is this a development question?</label>
-                    <input type="radio" name="development" value="true"> Yes
-                    <input type="radio" name="development" value="false" checked="checked"> No
-                </p-->
-                
-            </form>
         </script>
         <script type="text/javascript">
         $(function(){
@@ -52,7 +33,7 @@
             });
 
             //Tags autocomplete action
-        	$("#id_tags").autocomplete("/matching_tags/", {
+        	$("#id_tags").autocomplete("{% url matching_tags %}", {
                 minChars: 1,
         		matchContains: true,
                 max: 10,
@@ -81,7 +62,6 @@
                 }
 
             });
-          tag_wizard();
 
         });
 
@@ -114,12 +94,30 @@
 <div id="main-body" class="ask-body">
     <div id="askform">
         <form id="fmask" action="" method="post" accept-charset="utf-8">
-            <div class="form-item marginBottom">
-                <!--label for="id_title" ><strong>{{ form.title.label_tag }}:</strong></label--> <span class="form-error"></span><br/>
+            {% csrf_token %}
+			{% if not request.user.is_authenticated %}
+            <div class="message">
+                <span class="strong big">{% trans "You are welcome to start submitting your question anonymously." %}</span>
+                <p>{% blocktrans %}
+                    After submiting your question, you will be redirected to the login/signup page.
+                    Your question will be saved in the current session and will be published after you login with your existing account,
+                    or signup for a new account{% endblocktrans %}{% if "ask"|contained_in:settings.REQUIRE_EMAIL_VALIDATION_TO %}
+                    {% trans "and validate your email." %}{% else %}.{% endif %}</p>
+            </div>
+            {% else %}
+                {% if not request.user.email_valid_and_can_ask %}
+                    <div class="message">
+                        {% blocktrans %}Remember, your question will not be published until you validate your email.{% endblocktrans %}
+                        <a href="{% url send_validation_email %}">{% trans "Send me a validation link." %}</a>
+                    </div>
+                {% endif %}
+			{% endif %}
+            <div class="form-item">
+                <label for="id_title" ><strong>{{ form.title.label_tag }}:</strong></label> <span class="form-error"></span><br/>
                 {{ form.title }} {{ form.title.errors }}
-                <!--div class="title-desc">
+                <div class="title-desc">
                     {{ form.title.help_text }}
-                </div-->
+                </div>
             </div>
             <div id="ask-related-questions"></div>
             <div class="form-item">
@@ -158,24 +156,6 @@
             	{{ form.recaptcha }}
             </div>
             <div class="clear"></div>
-            {% endif %}
-
-            {% if not request.user.is_authenticated %}
-            <div class="message">
-                <span class="strong">{% trans "You are welcome to start submitting your question anonymously." %}</span>
-                <p>{% blocktrans %}
-                    After submiting your question, you will be redirected to the login/signup page.
-                    Your question will be saved in the current session and will be published after you login with your existing account,
-                    or signup for a new account{% endblocktrans %}{% if "ask"|contained_in:settings.REQUIRE_EMAIL_VALIDATION_TO %}
-                    {% trans "and validate your email." %}{% else %}.{% endif %}</p>
-            </div>
-            {% else %}
-                {% if not request.user.email_valid_and_can_ask %}
-                    <div class="message">
-                        {% blocktrans %}Remember, your question will not be published until you validate your email.{% endblocktrans %}
-                        <a href="{% url send_validation_email %}">{% trans "Send me a validation link." %}</a>
-                    </div>
-                {% endif %}
             {% endif %}
 			
             {% if not request.user.is_authenticated %}                                                                        

@@ -26,7 +26,7 @@
             });
             
             //Tags autocomplete action
-        	$("#id_tags").autocomplete("/matching_tags/", {
+        	$("#id_tags").autocomplete("{% url matching_tags %}", {
         		matchContains: true,
                 max: 20,
                 multiple: true,
@@ -92,7 +92,8 @@
 </div>
 <div id="main-body" class="ask-body">
     <div id="askform">
-        <form id="fmedit" action="" method="post" >
+        <form id="fmedit" action="" method="post">
+            {% csrf_token %}
             <label for="id_revision" ><strong>{% trans "revision" %}:</strong></label> <br/> 
             {% if revision_form.revision.errors %}{{ revision_form.revision.errors.as_ul }}{% endif %}
             <div style="vertical-align:middle">
@@ -102,9 +103,9 @@
             <div class="form-item">
                 <label for="id_title" ><strong>{{ form.title.label_tag }}:</strong></label> <span class="form-error"></span><br/> 
                 {{ form.title }} {{ form.title.errors }}  
-                <!--div class="title-desc">
+                <div class="title-desc">
                     {{ form.title.help_text }}
-                </div-->     
+                </div>     
             </div>
             <div class="form-item">
                 <div id="wmd-button-bar" class="wmd-panel"></div>
@@ -131,7 +132,7 @@
             <div class="form-item">
                 <strong>{{ form.tags.label_tag }}:</strong> <span class="form-error"></span><br/>
                 {{ form.tags }}  {{ form.tags.errors }}
-            <div class="title-desc">
+                <div class="title-desc">
                     {{ form.tags.help_text }}
                 </div>
             </div>
